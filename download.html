@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>오늘보드 다운로드</title>
+<link rel="stylesheet" href="./site.css">
+<style>
+  .wrap{max-width:520px}
+  .lockcard{text-align:center;padding:34px 28px}
+  .lock{font-size:40px;line-height:1;margin-bottom:10px}
+  .pwrow{display:flex;gap:8px;margin-top:18px}
+  .pwrow input{
+    flex:1;padding:12px 14px;border-radius:11px;border:1px solid var(--border);
+    background:var(--bg);color:var(--text);font:inherit;font-size:15px;outline:none;text-align:center;letter-spacing:.05em;
+  }
+  .pwrow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+  .btn{
+    padding:12px 20px;border-radius:11px;border:1px solid var(--accent);background:var(--accent);color:#fff;
+    font:inherit;font-size:14.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.08)}
+  .btn:disabled{opacity:.55;cursor:default;filter:none}
+  .btn.big{display:block;width:100%;padding:16px;font-size:16px;margin-top:6px;text-decoration:none;text-align:center}
+  .msg{margin-top:12px;font-size:13.5px;min-height:20px}
+  .msg.err{color:#e5484d}
+  .msg.ok{color:#16a34a}
+  .shake{animation:sh .35s}
+  @keyframes sh{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px;font-size:12px;color:var(--muted)}
+  .meta span{background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px 10px}
+  .hash{font-size:11px;color:var(--faint);word-break:break-all;margin-top:12px;line-height:1.5}
+  .note{font-size:13px;color:var(--muted);margin-top:18px;text-align:left;
+    background:var(--bg);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px}
+  .note.warn{border-left-color:#f59e0b}
+  h1{font-size:22px;margin:0 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card lockcard" id="gate">
+    <div class="lock">🔒</div>
+    <h1>오늘보드 다운로드</h1>
+    <p style="color:var(--muted);font-size:14px;margin:6px 0 0">
+      비밀번호를 입력하면 다운로드 링크가 나타납니다.<br>비밀번호는 배포자에게 받으세요.
+    </p>
+    <div class="pwrow">
+      <input type="password" id="pw" placeholder="비밀번호" autocomplete="off" spellcheck="false">
+      <button class="btn" id="go">확인</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <div class="card hidden" id="ready" style="text-align:center">
+    <div class="lock">✅</div>
+    <h1>다운로드 준비 완료</h1>
+    <div class="meta" id="meta"></div>
+    <a class="btn big" id="dl" href="#">⬇ 설치 파일 받기</a>
+    <div class="hash" id="hash"></div>
+
+    <div class="note warn">
+      <strong>설치할 때 파란 경고창이 뜹니다.</strong><br>
+      "Windows의 PC 보호" → <strong>추가 정보 → 실행</strong>을 누르세요.
+      개발자 인증서를 구입하지 않아서 뜨는 안내이며, 바이러스와는 무관합니다.
+    </div>
+    <div class="note">
+      처음 쓰신다면 <a href="./guide.html">사용설명서</a>를 먼저 보세요.
+      구글 캘린더 연결부터 단축키까지 정리해 뒀습니다.
+    </div>
+    <p style="margin-top:16px"><button class="btn" id="lockAgain" style="background:transparent;color:var(--muted);border-color:var(--border)">잠그기</button></p>
+  </div>
+
+  <footer>
+    <a href="./index.html">홈</a>
+    <a href="./guide.html">사용설명서</a>
+    <a href="./privacy.html">개인정보처리방침</a>
+  </footer>
+</div>
+
+<script src="./dl-config.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const KEY = 'tb_dl_pw';
+  let busy = false;
+
+  function b64(s){ const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i); return u; }
+
+  async function unlock(pw, silent) {
+    const cfg = window.DL_CONFIG;
+    if (!cfg) { show('설정 파일을 불러오지 못했습니다.', 'err'); return false; }
+    if (busy) return false;
+    busy = true;
+    if (!silent) show('확인 중…', '');
+    try {
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt: b64(cfg.salt), iterations: cfg.iter, hash: 'SHA-256' },
+        base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+      const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(cfg.iv) }, key, b64(cfg.data));
+      const info = JSON.parse(new TextDecoder().decode(plain));
+      reveal(info, pw);
+      return true;
+    } catch (e) {
+      if (!silent) {
+        show('비밀번호가 맞지 않습니다.', 'err');
+        $('#gate').classList.add('shake');
+        setTimeout(() => $('#gate').classList.remove('shake'), 360);
+        $('#pw').select();
+      }
+      try { localStorage.removeItem(KEY); } catch (_) {}
+      return false;
+    } finally { busy = false; }
+  }
+
+  function show(t, cls) { const m = $('#msg'); m.textContent = t; m.className = 'msg ' + (cls || ''); }
+
+  function reveal(info, pw) {
+    $('#dl').href = info.url;
+    $('#dl').setAttribute('download', '');
+    const meta = [];
+    if (info.version) meta.push('v' + info.version);
+    if (info.filename) meta.push(info.filename);
+    if (info.size) meta.push(info.size);
+    if (window.DL_CONFIG.updated) meta.push(window.DL_CONFIG.updated + ' 갱신');
+    $('#meta').innerHTML = meta.map(x => '<span>' + x + '</span>').join('');
+    $('#hash').textContent = info.sha256 ? 'SHA-256: ' + info.sha256 : '';
+    $('#gate').classList.add('hidden');
+    $('#ready').classList.remove('hidden');
+    try { localStorage.setItem(KEY, pw); } catch (_) {}
+  }
+
+  $('#go').onclick = () => { const v = $('#pw').value.trim(); if (v) unlock(v, false); else $('#pw').focus(); };
+  $('#pw').addEventListener('keydown', e => { if (e.key === 'Enter') $('#go').click(); });
+  $('#lockAgain').onclick = () => {
+    try { localStorage.removeItem(KEY); } catch (_) {}
+    $('#ready').classList.add('hidden');
+    $('#gate').classList.remove('hidden');
+    $('#pw').value = ''; show('', ''); $('#pw').focus();
+  };
+
+  // 한 번 푼 기기는 기억
+  let saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (_) {}
+  if (saved) unlock(saved, true).then(ok => { if (!ok) $('#pw').focus(); });
+  else $('#pw').focus();
+})();
+</script>
+</body>
+</html>
