@@ -1,8 +1,8 @@
 window.DL_CONFIG = {
   "v": 1,
   "iter": 250000,
-  "salt": "npoBRiJ4KOZeRxgQGFJPKQ==",
-  "iv": "Mji+O+cWjjhKfWf8",
-  "data": "aRU2c9tXiz9xUCrMxvBwDGkIPJmf9FoumnlT+e0EUiDHlwV1KrVHwITrtJ6sS075hfd8BQCM+4nfNNdjXQ0rG43mWbo4rNruJNsgfuk41bWIJXdDvf0fJmu5Nhj8MUUVpQ+WPr75ATAybUuvp4QXkHUuuv/cou/lG2I8aLlbyzl4AEzUjHKGC3djPWiZ2ymuuxjxGP/m7rccSUeaLC4s/+ZNcTfoDHFmzsbH41jengcn4OOweF77eUUsYIRL8CDZQzSXy6bNmDwYPTgchltdUwD5ws3TMD9NY6lChujSPzZQY/h3z/oQ85bLLlGHqLEDqst/pClEa3yTR3CKKybHkda2mgyaFRODpdveq0Zor/J2GGggZzUl",
-  "updated": "2026-09-02"
+  "salt": "Sl6OHX1XdQ3D/0EtallcIg==",
+  "iv": "s1JoH5SpnwKeZXpu",
+  "data": "/+kqOqYghULY1ZwCxPDElCDHZxPrijn4ghiPlYy7Een1xxB+OIppgZrPPhY7pAJC5SrwYCo0TdOPsEE/jtyQqHE8v76FAyTQX2envSaRw5UKOQZcYFVZ2pz7ogeJ8TZW8TLs4pbnUSKd0wH0F+plnBtc45Fp1mqELFBCDabRH+33WrHEwx3WFXCPcPHDMaVD457FNgnAqWtYH7hr+t6nHtgatnRDO11WgaAO5xOotfEwkPrUGyzw9zTJiUpsQOSjg8N2qedso3FDlInX6TVOgZQulOUWUK/GJ9XiUz+NISVRiSVpZDk/YrPNtW+A6KYPPHhZNnM3OoAo6/0skHj/up5gtjX17CMqsQWvvu3btCuAcmCpzVin",
+  "updated": "2026-09-08"
 };
